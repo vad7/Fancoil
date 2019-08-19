@@ -1,0 +1,230 @@
+<!-- saved from url=(0037)http://aterlux.ru/article/ntcresistor -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>﻿Измерение температуры при помощи NTC термистора и микроконтроллера AVR</title>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="style.css">
+ </head>
+ <body>
+  <table cellspacing="0" cellpadding="0" class="pagebound" width="100%" height="100%">
+   <tbody><tr width="100%">
+    <td valign="TOP" align="LEFT" width="100%">
+<div class="article">
+<h1>﻿Измерение температуры при помощи NTC термистора и микроконтроллера AVR</h1>
+<div class="contents">
+<a href="http://aterlux.ru/article/ntcresistor#__h2_1">Характеристика NTC термистора</a><br>
+<a href="http://aterlux.ru/article/ntcresistor#__h2_2">Вычисление температуры</a><br>
+<a href="http://aterlux.ru/article/ntcresistor#__h2_3">Схемы подключения</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://aterlux.ru/article/ntcresistor#__h3_4">Подключение термистора</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://aterlux.ru/article/ntcresistor#__h3_5">Подключение к АЦП микроконтроллера ATmega</a><br>
+<a href="http://aterlux.ru/article/ntcresistor#__h2_6">Расчёт таблицы значений</a><br>
+<a href="http://aterlux.ru/article/ntcresistor#__h2_7">Пример использования</a><br>
+</div>
+<br>
+<p>Автор: Погребняк Дмитрий</p>
+<p>Самара, 2013.</p>
+<br>
+<p><a href="http://aterlux.ru/article/ntcresistor-en">Click here</a> to read this article in English.</p>
+<br>
+<p>Одним из вариантов для измерения температуры является использование термисторов. Среди преимуществ термистора можно выделить большое значение температурного коэффициента, то есть значительное изменение сопротивления в зависимости от температуры (порядка 2-10% на Кельвин). Термисторы бывают двух типов: с положительным температурным коэффициентом (PTC, Positive Temperature Coefficient), то есть увеличивающие своё сопротивление с увеличением температуры, и с отрицательным (NTC, Negative Temperature Coefficient) – уменьшающие сопротивление с возрастанием температуры. Речь в данной статье пойдёт про вторые, и про их использования для измерения температуры в сочетании с микроконтроллерами AVR</p>
+<br>
+<a name="__h2_1"></a><h2>Характеристика NTC термистора</h2>
+<p>Термисторы характеризуются рядом параметров, такими, как максимальный допустимый ток, точность, сопротивление при определённой температуре (как правило, при 25°С). Одним из параметров, характеризующим степень изменения сопротивления в зависимости от температуры является <b>коэффициент температурной чувствительности</b>, обозначаемый <b>B</b>. Этот коэффициент рассчитывается на основе значений сопротивления при двух конкретных значениях температур. Во многих случаях этими температурами выбираются 25°С и 100°С. Обычно температуры, использованные при вычислении коэффициента указываются после буквы, например <b>B<sub>25/100</sub></b>. Коэффициент B измеряется в Кельвинах и вычисляется по следующей формуле:</p>
+<a name="FORMULA1"></a><p></p><center><b>B = (ln(R<sub>1</sub>) – ln(R<sub>2</sub>)) / (1 / T<sub>1</sub> -  1 / T<sub>2</sub>)</b> <i>[1]</i>,</center><p></p>
+<p>где R<sub>1</sub> и R<sub>2</sub> - значения сопротивлений при температурах соответственно T<sub>1</sub> и T<sub>2</sub>, выраженных в Кельвинах. </p>
+<p>Из этой формулы следуют и обратные: </p>
+<a name="FORMULA2"></a><p></p><center><b>R<sub>1</sub> = R<sub>2</sub> * e<sup>(B * (1 / T<sub>1</sub> -  1 / T<sub>2</sub>))</sup></b> <i>[2]</i>.</center><p></p>
+<p></p><center>и</center><p></p>
+<a name="FORMULA3"></a><p></p><center><b>T<sub>1</sub> = 1 / ((ln(R<sub>1</sub>) – ln(R<sub>2</sub>)) / B + 1 / T<sub>2</sub>)</b> <i>[3]</i>.</center><p></p>
+<br>
+<a name="__h2_2"></a><h2>Вычисление температуры</h2>
+<p>Термисторы обладают высокой степенью нелинейности параметров, и термисторы различных моделей, даже при одинаковых значениях параметра B<sub>25/100</sub> могут по разному изменять сопротивление в зависимости от температуры. Поэтому формула <a href="http://aterlux.ru/article/ntcresistor#FORMULA3"><i>[3]</i></a> может лишь приблизительно оценить температуру. Кроме того, такая формула подразумевает сложные вычисления, которые требуют много процессорного времени, что часто является неприемлемым. Более простым и эффективным подходом является хранение таблицы, в которую заносятся предварительно рассчитанные значения, возвращаемые АЦП при тех, или иных температурах. Для экономии памяти можно хранить значения только для некоторых точек, искать их в таблице двоичным поиском, а промежуточные значения получать линейной интерполяцией. Для измерений температуры окружающего воздуха с точностью до 0.3°C, достаточно хранить значения с шагом 5°C. Если значения лежат в пределах 16 бит (и занимают 2 байта), то для хранения такой таблицы для диапазона измеряемых температур от -30 до 70 градусов потребуется всего 40 байт. Точность измерений можно повысить, уменьшив шаг таблицы. Так при шаге 2°C можно добиться точности до 0.1°C на широком диапазоне измерений.</p>
+<br>
+<p>Производители термисторов, как правило, приводят таблицы показывающие изменение сопротивления в зависимости от температур. Значения в этих таблицах также привязаны к сетке температур с некоторым шагом (например, 5°C). Используя формулы <a href="http://aterlux.ru/article/ntcresistor#FORMULA1"><i>[1]</i></a> и <a href="http://aterlux.ru/article/ntcresistor#FORMULA2"><i>[2]</i></a> можно с достаточной точностью интерполировать табличные значения.</p>
+<br>
+<a name="__h2_3"></a><h2>Схемы подключения</h2>
+<a name="__h3_4"></a><h3>Подключение термистора</h3>
+<a name="SCHEMES"></a><p><table width="1" cellspacing="0" cellpadding="0" class="imgtable" align="left" style="margin-right:10px; align:left"><tbody><tr class="imgtable"><td class="imgtable"><img src="ntc_a.png" alt="Схема A" class="artimg"></td></tr><tr width="1" class="imgtablelabel"><td class="imgtablelabel">Схема A</td></tr></tbody></table><table width="1" cellspacing="0" cellpadding="0" class="imgtable" align="left" style="margin-right:10px; align:left"><tbody><tr class="imgtable"><td class="imgtable"><img src="ntc_b.png" alt="Схема B" class="artimg"></td></tr><tr width="1" class="imgtablelabel"><td class="imgtablelabel">Схема B</td></tr></tbody></table><table width="1" cellspacing="0" cellpadding="0" class="imgtable" align="left" style="margin-right:10px; align:left"><tbody><tr class="imgtable"><td class="imgtable"><img src="ntc_c.png" alt="Схема C" class="artimg"></td></tr><tr width="1" class="imgtablelabel"><td class="imgtablelabel">Схема C</td></tr></tbody></table><table width="1" cellspacing="0" cellpadding="0" class="imgtable" align="baseline" style="margin-right:10px; align:baseline"><tbody><tr class="imgtable"><td class="imgtable"><img src="ntc_d.png" alt="Схема D" class="artimg"></td></tr><tr width="1" class="imgtablelabel"><td class="imgtablelabel">Схема D</td></tr></tbody></table></p>
+<p>Наиболее простым вариантом подключения является схема A. При выборе номинала резистора R<sub>A</sub> примерно равным сопротивлению термистора в районе измеряемых температур, значения U будут изменяться ближе к линейным, что обеспечит большую точность при интерполяции табличных значений.</p>
+<p>Выбирая номиналы R<sub>A</sub> и термистора, следует учесть, что протекающий через термистор ток вызывает его нагрев и, как следствие, искажение показаний. Желательно чтобы мощность на термисторе не превышала 1 мВт. А значит, при напряжении U<sub>0</sub> = 5В, R<sub>A</sub> должен быть как минимум, 10 килоОм. Сопротивление термистора в измеряемом диапазоне должно иметь примерно тот же порядок.</p>
+<br>
+<p>Схема B призвана ограничить мощность, рассеиваемую на термисторе.</p>
+<br>
+<p>Схемы C и D являются обратными к A и B. Их имеет смысл использовать, если требуется измерять низкие температуры, когда референтное значение АЦП (U<sub>ref</sub>) ниже U<sub>0</sub>.</p>
+<br>
+<a name="__h3_5"></a><h3>Подключение к АЦП микроконтроллера ATmega</h3>
+<p></p><center><table width="1" cellspacing="0" cellpadding="0" class="imgtable" style="margin-right:10px; align:center"><tbody><tr class="imgtable"><td class="imgtable"><img src="atmega_adc.png" alt="Подключение АЦП микроконтроллеров ATmega" class="artimg"></td></tr><tr width="1" class="imgtablelabel"><td class="imgtablelabel">Подключение АЦП микроконтроллеров ATmega</td></tr></tbody></table></center><p></p>
+<p>У контроллеров ATmega для снижения шумов используется отдельная линия питания для модуля АЦП. Инструкция рекомендует подключать эти входы через фильтр: индуктивность L = 10мкГн, и конденсатор C2 = 0,1мкФ.</p>
+<p>Микроконтроллер может использовать либо внешнее референтное напряжение для АЦП, либо внутреннее (2,56В или 1,1В), либо, в качестве такового, использовать напряжение питания АЦП: AVCC. При использовании внешнего напряжения, оно должно быть подано на вход AREF. При использовании AVCC, или внутреннего напряжения 2,56В, между этим входом и землёй должен быть размещён конденсатор (на схеме C1). Инструкция не даёт чёткого указания для выбора ёмкости конденсатора, рекомендую использовать керамический конденсатор 0,1мкФ и более.</p>
+<br>
+<p>Для снижения измеряемых шумов, рекомендую термистор также подключать к фильтрованному напряжению параллельно AVCC, и настроить на использование этого напряжения в качестве референтного.</p>
+<p>Дополнительно, для подавления шумов возникающих на линиях, можно установить конденсатор C3 в диапазоне 1-100нФ.</p>
+<br>
+<p>Следует учесть, что помимо модуля АЦП, вход AVCC запитывает также некоторые из портов ввода/вывода (как правило, на тех же выводах, что используются для АЦП). Использование этих портов на вывод и подключение к ним нагрузки может создать дополнительные шумы в работе АЦП.</p>
+<br>
+<p>Чтобы нивелировать шумы, возникающие на АЦП, рекомендую провести замеры несколько раз подряд и просуммировать полученные значения. В микроконтроллерах ATmega АЦП – 10-разрядный. Просуммировав результаты 64 подряд идущих измерений, результат остаётся в пределах 16-битного беззнакового целого, что не потребует дополнительной памяти для сохранения таблицы значений. При большем числе измерений также можно оставаться в пределах 16 бит, соответствующим образом сдвигая или деля результат.</p>
+<br>
+<a name="__h2_6"></a><h2>Расчёт таблицы значений</h2>
+<p>Вашему вниманию предлагаю скрипт для онлайн расчёта таблицы значений АЦП.</p>
+<p>Расчёт значений ведётся либо по двум значениям температур и сопротивлений, либо вводится списком, либо используется одна из предзагруженных R/T характеристик. В настоящее время загружены R/T характеристики термисторов фирмы Siemens/EPCOS. Выберите подходящую из списка.</p>
+<p>Загруженные характеристики даны с шагом 5°С, при выборе меньшего шага сетки, значения получаются путём интерполяции по формулам <a href="http://aterlux.ru/article/ntcresistor#FORMULA1"><i>[1]</i></a> и <a href="http://aterlux.ru/article/ntcresistor#FORMULA2"><i>[2]</i></a> двух ближайших значений из таблицы.</p>
+<p>При построении таблицы автоматически соответствующим образом обновляется пример исходного кода под ней.</p>
+<br>
+<p><b>Внимание!</b> Так как параметры термисторов в значительной мере нелинейны, расчёт по двум значениям сопротивлений, либо по значению и коэффициенту будет очень приблизительным. Вычисленное значение температуры при измерении высоких, или низких температур в таком случае может значительно (на десятки градусов) отличаться от актуальной.</p>
+<p>Чтобы узнать подходящий тип R/T характеристики для вашего термистора, скачайте документацию, данную заводом изготовителем. </p>
+<p><b>Форма для он-лайн расчёта значений АЦП</b></p>
+<script type="text/javascript" async="" src="watch.js"></script><script language="JavaScript" src="ntcresistor.js"></script>
+  <img align="RIGHT" id="ntc_img_scheme" src="ntc_a.png" border="0">
+  <table class="form">
+   <tbody><tr><td class="formdesc">Данные для таблицы</td><td class="form" width="320"><select id="ntc_b_select" class="formsel" onchange="onNtcSelectChange();"><option value="-1">Рассчитать по T1, R1, T2, R2</option><option value="-2">Рассчитать по T1, R1, T2, B(T2/T1)</option><option value="-15">Список значений R/R1</option><option value="0">EPCOS R/T:1201; B25/100:2700K</option><option value="1">EPCOS R/T:1202; B25/100:2800K</option><option value="2">EPCOS R/T:1203; B25/100:2900K</option><option value="3">EPCOS R/T:1207; B25/100:2965K</option><option value="4">EPCOS R/T:1302; B25/100:3000K</option><option value="5">EPCOS R/T:1303; B25/100:3050K</option><option value="6">EPCOS R/T:1308; B25/100:3060K</option><option value="7">EPCOS R/T:1208; B25/100:3065K</option><option value="8">EPCOS R/T:3207; B25/100:3100K</option><option value="9">EPCOS R/T:1209; B25/100:3165K</option><option value="10">EPCOS R/T:1305; B25/100:3200K</option><option value="11">EPCOS R/T:3204; B25/100:3250K</option><option value="12">EPCOS R/T:1210; B25/100:3265K</option><option value="13">EPCOS R/T:1304; B25/100:3300K</option><option value="14">EPCOS R/T:8401; B0/100:3390K</option><option value="15">EPCOS R/T:1306; B25/100:3450K</option><option value="16">EPCOS R/T:3206; B25/100:3450K</option><option value="17">EPCOS R/T:8402; B0/100:3450K</option><option value="18">EPCOS R/T:8407; B0/100:3450K</option><option value="19">EPCOS R/T:8307; B25/100:3492K</option><option value="20">EPCOS R/T:1309; B25/100:3520K</option><option value="21">EPCOS R/T:1010; B25/100:3530K</option><option value="22">EPCOS R/T:1006; B25/100:3550K</option><option value="23">EPCOS R/T:8501; B25/100:3550K</option><option value="24">EPCOS R/T:1008; B25/100:3560K</option><option value="25">EPCOS R/T:1307; B25/100:3560K</option><option value="26">EPCOS R/T:7003; B25/100:3625K</option><option value="27">EPCOS R/T:1011; B25/100:3730K</option><option value="28">EPCOS R/T:2901; B25/100:3760K</option><option value="29">EPCOS R/T:1013; B25/100:3900K</option><option value="30">EPCOS R/T:2001; B25/100:3920K</option><option value="31">EPCOS R/T:1009; B25/100:3930K</option><option value="32">EPCOS R/T:4001; B25/100:3950K</option><option value="33">EPCOS R/T:4901; B25/100:3950K</option><option value="34">EPCOS R/T:8018; B25/100:3964K</option><option value="35">EPCOS R/T:8403; B0/100:3970K</option><option value="36">EPCOS R/T:8415; B0/100:3970K</option><option value="37">EPCOS R/T:2003; B25/100:3980K</option><option value="38">EPCOS R/T:7002; B25/100:3988K</option><option value="39">EPCOS R/T:8016; B25/100:3988K</option><option value="40">EPCOS R/T:8502; B25/100:4000K</option><option value="41">EPCOS R/T:8404; B0/100:4036K</option><option value="42">EPCOS R/T:8304; B25/100:4092K</option><option value="43">EPCOS R/T:2004; B25/100:4100K</option><option value="44">EPCOS R/T:2101; B25/100:4100K</option><option value="45">EPCOS R/T:2911; B25/100:4170K</option><option value="46">EPCOS R/T:2903; B25/100:4200K</option><option value="47">EPCOS R/T:1014; B25/100:4250K</option><option value="48">EPCOS R/T:1012; B25/100:4300K</option><option value="49">EPCOS R/T:2904; B25/100:4300K</option><option value="50">EPCOS R/T:4012; B25/100:4355K</option><option value="51">EPCOS R/T:4003; B25/100:4450K</option><option value="52">EPCOS R/T:8503; B25/100:4500K</option><option value="53">EPCOS R/T:8405; B100/200:4537K</option><option value="54">EPCOS R/T:2014; B25/100:4540K</option><option value="55">EPCOS R/T:2005; B25/100:4600K</option><option value="56">EPCOS R/T:2007; B25/100:4830K</option><option value="57">EPCOS R/T:2006; B25/100:5000K</option><option value="58">EPCOS R/T:8406; B200/300:5133K</option><option value="59">EPCOS R/T:8413; B150/250:5300K</option></select>
+<div width="100%" style="text-align: justify; white-space:normal;" id="ntc_b_notice"><small><font color="#C00000">*Из-за нелинейности параметров термистора, расчёт температуры на основе таблицы, построенной по двум точкам, будет грубым и полученное значение может на десятки градусов отличаться от действительного при измерении высоких и низких температур. 
+Для точного измерения в широком диапазоне выберите одну из предзагруженных R/T характеристик, соответствующую вашему термистору, или перечислите  список значений R/R1 вручную.
+</font></small></div></td></tr>
+   <tr id="ntc_tr_t1"><td class="formdesc">T1</td><td class="form"><input type="TEXT" class="formtext" id="ntc_t1" size="20" value="25">&nbsp;°С</td>
+   </tr><tr><td class="formdesc">R1(NTC), cопротивление при <span id="ntc_r1_ref_desc">T1</span></td><td class="form"><input type="TEXT" class="formtext" id="ntc_r1" size="20" value="10.0">&nbsp;<b><u>кило</u></b>Ом</td>
+   </tr><tr id="ntc_tr_t2"><td class="formdesc">T2</td><td class="form"><input type="TEXT" class="formtext" id="ntc_t2" size="20" value="50">&nbsp;°С</td>
+   </tr><tr id="ntc_tr_r2"><td class="formdesc">R2, сопротивление при T2</td><td class="form"><input type="TEXT" class="formtext" id="ntc_r2" size="20" value="1.211034">&nbsp;<b><u>кило</u></b>Ом</td>
+   </tr><tr id="ntc_tr_tab" style="display: none;"><td class="formdesc">Данные для таблицы:R/R1<br>
+     начиная с T2, с выбранным шагом сетки.<br>
+     Разделитель значений - запятая.
+    </td><td><textarea class="formtext" id="ntc_tab" cols="50" rows="10"></textarea></td>
+   </tr>
+   <tr id="ntc_tr_b" style="display: none;"><td class="formdesc">B<sub>T1/T2</sub></td><td class="form"><input type="TEXT" class="formtext" id="ntc_b_t1_t2" size="20/">&nbsp;K</td>
+   </tr><tr><td class="formdesc"><a href="http://aterlux.ru/article/ntcresistor#SCHEMES">Схема включения термистора</a></td><td class="form"><select class="formsel" id="ntc_scheme" onchange="onNtcSchemeChange();">
+     <option value="0" selected="">Схема A
+     </option><option value="1">Схема B
+     </option><option value="2">Схема C
+     </option><option value="3">Схема D
+    </option></select>
+   </td></tr>
+   <tr><td class="formdesc">Номинал резистора R<sub>A</sub></td><td class="form"><input type="TEXT" class="formtext" id="ntc_ra" size="20" value="10">&nbsp;<b><u>кило</u></b>Ом</td>
+   </tr><tr id="ntc_tr_rb" style="display: none;"><td class="formdesc">Номинал резистора R<sub>B</sub></td><td class="form"><input type="TEXT" class="formtext" id="ntc_rb" size="20" value="50">&nbsp;<b><u>кило</u></b>Ом</td>
+   </tr><tr><td class="formdesc">Разрядность АЦП</td><td class="form"><select class="formsel" id="ntc_adc_limit">
+     <option value="64">6 бит
+     </option><option value="128">7 бит
+     </option><option value="256">8 бит
+     </option><option value="512">9 бит
+     </option><option value="1024" selected="">10 бит
+     </option><option value="2048">11 бит
+     </option><option value="4096">12 бит
+     </option><option value="8192">13 бит
+     </option><option value="16384">14 бит
+     </option><option value="32768">15 бит
+     </option><option value="65536">16 бит
+     </option><option value="131072">17 бит
+     </option><option value="262144">18 бит
+     </option><option value="524288">19 бит
+     </option><option value="1048576">20 бит
+    </option></select>
+   </td></tr>
+   <tr><td class="formdesc">Множитель результата АЦП</td><td class="form"><input type="TEXT" class="formtext" id="ntc_adc_scaler" size="20" value="1"></td>
+   </tr><tr><td class="formdesc">U<sub>0</sub>, напряжение на входе</td><td class="form"><input type="TEXT" class="formtext" id="ntc_u0" size="20" value="5.0">&nbsp;В</td>
+   </tr><tr><td class="formdesc">U<sub>ref</sub>, референтное напряжение АЦП</td><td class="form"><input type="TEXT" class="formtext" id="ntc_uref" size="20" value="5.0">&nbsp;В</td>
+   </tr><tr><td class="formdesc">Рассчитать с</td><td class="form"><input type="TEXT" class="formtext" id="ntc_t_from" size="5" value="-55">&nbsp;°С&nbsp;по&nbsp;<input type="TEXT" class="formtext" id="ntc_t_to" size="5" value="125">&nbsp;°С</td>
+   </tr><tr><td class="formdesc">Шаг сетки</td><td class="form"><select class="formsel" id="ntc_table_step">
+     <option value="0.1">0.1 °С
+     </option><option value="0.5">0.5 °С
+     </option><option value="1">1 °С
+     </option><option value="2">2 °С
+     </option><option value="2.5">2.5 °С
+     </option><option value="5" selected="">5 °С
+     </option><option value="10">10 °С
+    </option></select>
+   </td></tr>
+	<tr><td class="formdesc">Таблица сопротивлений</td><td class="form"><input type="checkbox" id="print_resis_table"></td></tr>
+   
+   <tr><td class="form" colspan="2" align="CENTER"><button class="formbtn" onclick="ntcBuildTable(&#39;ru&#39;);">Построить таблицу</button></td></tr>
+  </tbody></table>
+  <table width="100%">
+   <thead>
+    <tr><th>T,°С</th><th>R/R1</th><th>R,килоОм</th><th>U,В</th><th>I,мкА</th><th>P,мВт</th><th>U/Uref</th><th>ADC</th><th>E,°С</th>
+   </tr></thead>
+   <tbody id="ntc_result_table_body">
+   </tbody> 
+  </table>
+  <script language="JavaScript">
+   fillNtcSelect('ru');
+  </script>
+<p><b>Пояснения к таблице:</b></p>
+<p><b>жирным</b> выделены значения R/R1 и R, полученные на основе табличных. Обычным шрифтом обозначены значения полученные интерполяцией или экстраполяцией по формулам.</p>
+<p><b>ADC</b> – округлённое значение на выходе АЦП, с учётом множителя. Значения, выходящие за предел измерений АЦП, не отображаются.</p>
+<p><b>I,мкА</b> - ток в цепи.</p>
+<p><b>P,мВт</b> - мощность, рассеиваемая на термисторе.</p>
+<p><b>E</b> – эвристическая оценка возможной погрешности вычисленной температуры, вызванной использованием линейной интерполяции табличных значений, и ограниченной точностью АЦП. Позволяет выбрать параметры и схему включения таким образом, чтобы в области измеряемых значений погрешность была минимальна. Эта оценка не учитывает возможный шум, возникающий на АЦП, а также погрешность, вызванную нагревом термистора из-за протекающих токов. Погрешность можно уменьшить выбрав меньший шаг таблицы, используя АЦП большей разрядности, или путём усреднения большего числа измерений, а также подбором номиналов сопротивлений в цепи.</p>
+<br>
+<p><b>Код, соответствующий таблице</b></p>
+<pre class="code"><span class="keyword">#include</span> <span class="str">&lt;avr/io.h&gt;</span>
+<span class="keyword">#include</span> <span class="str">&lt;avr/pgmspace.h&gt;</span>
+
+<span class="comment">// Значение температуры, возвращаемое если сумма результатов АЦП больше первого значения таблицы</span>
+<span class="keyword">#define</span> <span class="const">TEMPERATURE_UNDER</span> <span class="numeric" id="ntc_code_under">0</span>
+<span class="comment">// Значение температуры, возвращаемое если сумма результатов АЦП меньше последнего значения таблицы</span>
+<span class="keyword">#define</span> <span class="const">TEMPERATURE_OVER</span> <span class="numeric" id="ntc_code_over">0</span>
+<span class="comment">// Значение температуры соответствующее первому значению таблицы</span>
+<span class="keyword">#define</span> <span class="const">TEMPERATURE_TABLE_START</span> <span class="numeric" id="ntc_code_start">0</span>
+<span class="comment">// Шаг таблицы </span>
+<span class="keyword">#define</span> <span class="const">TEMPERATURE_TABLE_STEP</span> <span class="numeric" id="ntc_code_step">50</span>
+
+<span class="comment">// Тип каждого элемента в таблице, если сумма выходит в пределах 16 бит - uint16_t, иначе - uint32_t</span>
+<span class="keyword">typedef</span> <span class="keyword" id="ntc_code_type_entry">uint16_t</span> <span class="var">temperature_table_entry_type</span>;
+<span class="comment">// Тип индекса таблицы. Если в таблице больше 256 элементов, то uint16_t, иначе - uint8_t</span>
+<span class="keyword">typedef</span> <span class="keyword" id="ntc_code_type_index">uint8_t</span> <span class="var">temperature_table_index_type</span>;
+<span class="comment">// Метод доступа к элементу таблицы, должна соответствовать temperature_table_entry_type</span>
+<span class="keyword">#define</span> <span class="const">TEMPERATURE_TABLE_READ</span>(<span class="var">i</span>) <span class="method" id="ntc_code_pgm_read">pgm_read_word</span>(&amp;<span class="var">termo_table</span>[<span class="var">i</span>])
+
+<span class="comment">/* Таблица суммарного значения АЦП в зависимости от температуры. От большего значения к меньшему
+   Для построения таблицы использованы следующие парамертры:</span>
+<span class="comment" id="ntc_code_params"></span><span class="comment">*/</span>
+<span class="keyword">const</span> <span class="var">temperature_table_entry_type</span> <span class="var">termo_table</span>[] <span class="const">PROGMEM</span> = {<span class="numeric" id="ntc_code_table">
+  0 <span class="comment">// Нажмите "Построить  таблицу" на форме выше, чтобы заполнить этот массив</span></span>
+};
+
+<span class="comment">// Функция вычисляет значение температуры в десятых долях градусов Цельсия</span>
+<span class="comment">// в зависимости от суммарного значения АЦП.</span>
+<span class="keyword">int16_t</span> <span class="method">calc_temperature</span>(<span class="var">temperature_table_entry_type</span> <span class="var">adcsum</span>) {
+  <span class="var">temperature_table_index_type</span> <span class="var">l</span> = <span class="numeric">0</span>;
+  <span class="var">temperature_table_index_type</span> <span class="var">r</span> = (<span class="keyword">sizeof</span>(<span class="var">termo_table</span>) / <span class="keyword">sizeof</span>(<span class="var">termo_table</span>[<span class="numeric">0</span>])) - <span class="numeric">1</span>;
+  <span class="var">temperature_table_entry_type</span> <span class="var">thigh</span> = <span class="const">TEMPERATURE_TABLE_READ</span>(<span class="var">r</span>);
+  
+  <span class="comment">// Проверка выхода за пределы и граничных значений</span>
+  <span class="keyword">if</span> (<span class="var">adcsum</span> &lt;= <span class="var">thigh</span>) {
+    <span class="keyword">#ifdef</span> <span class="const">TEMPERATURE_UNDER</span>
+      <span class="keyword">if</span> (<span class="var">adcsum</span> &lt; <span class="var">thigh</span>) 
+        <span class="keyword">return</span> <span class="const">TEMPERATURE_UNDER</span>;
+    <span class="keyword">#endif</span>
+    <span class="keyword">return</span> <span class="const">TEMPERATURE_TABLE_STEP</span> * <span class="var">r</span> + <span class="const">TEMPERATURE_TABLE_START</span>;
+  }
+  <span class="var">temperature_table_entry_type</span> <span class="var">tlow</span> = <span class="const">TEMPERATURE_TABLE_READ</span>(<span class="numeric">0</span>);
+  <span class="keyword">if</span> (<span class="var">adcsum</span> &gt;= <span class="var">tlow</span>) {
+    <span class="keyword">#ifdef</span> <span class="const">TEMPERATURE_OVER</span>
+      <span class="keyword">if</span> (<span class="var">adcsum</span> &gt; <span class="var">tlow</span>)
+        <span class="keyword">return</span> <span class="const">TEMPERATURE_OVER</span>;
+    <span class="keyword">#endif</span>
+    <span class="keyword">return</span> <span class="const">TEMPERATURE_TABLE_START</span>;
+  }
+
+  <span class="comment">// Двоичный поиск по таблице</span>
+  <span class="keyword">while</span> ((<span class="var">r</span> - <span class="var">l</span>) &gt; <span class="numeric">1</span>) {
+    <span class="var">temperature_table_index_type</span> <span class="var">m</span> = (<span class="var">l</span> + <span class="var">r</span>) &gt;&gt; <span class="numeric">1</span>;
+    <span class="var">temperature_table_entry_type</span> <span class="var">mid</span> = <span class="const">TEMPERATURE_TABLE_READ</span>(<span class="var">m</span>);
+    <span class="keyword">if</span> (<span class="var">adcsum</span> &gt; <span class="var">mid</span>) {
+      <span class="var">r</span> = <span class="var">m</span>;
+    } <span class="keyword">else</span> {
+      <span class="var">l</span> = <span class="var">m</span>;
+    }
+  }
+  <span class="var">temperature_table_entry_type</span> <span class="var">vl</span> = <span class="const">TEMPERATURE_TABLE_READ</span>(<span class="var">l</span>);
+  <span class="keyword">if</span> (<span class="var">adcsum</span> &gt;= <span class="var">vl</span>) {
+    <span class="keyword">return</span> <span class="var">l</span> * <span class="const">TEMPERATURE_TABLE_STEP</span> + <span class="const">TEMPERATURE_TABLE_START</span>;
+  }
+  <span class="var">temperature_table_entry_type</span> <span class="var">vr</span> = <span class="const">TEMPERATURE_TABLE_READ</span>(<span class="var">r</span>);
+  <span class="var">temperature_table_entry_type</span> <span class="var">vd</span> = <span class="var">vl</span> - <span class="var">vr</span>;
+  <span class="keyword">int16_t</span> <span class="var">res</span> = <span class="const">TEMPERATURE_TABLE_START</span> + <span class="var">r</span> * <span class="const">TEMPERATURE_TABLE_STEP</span>; 
+  <span class="keyword">if</span> (<span class="var">vd</span>) {
+    <span class="comment">// Линейная интерполяция</span>
+    <span class="var">res</span> -= ((<span class="const">TEMPERATURE_TABLE_STEP</span> * (<span class="keyword">int32_t</span>)(<span class="var">adcsum</span> - <span class="var">vr</span>) + (<span class="var">vd</span> &gt;&gt; <span class="numeric">1</span>)) / <span class="var">vd</span>);
+  }
+  <span class="keyword">return</span> <span class="var">res</span>;
+}
+</pre>
+</body></html>

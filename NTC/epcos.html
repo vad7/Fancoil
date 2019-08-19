@@ -1,0 +1,92 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>﻿Измерение температуры при помощи NTC термистора и микроконтроллера AVR</title>
+
+<p>Сводная таблица для некоторых моделей термисторов Siemens/Epcos приведена ниже. Нажмите на код R/T характеристики, чтобы подгрузить параметры в форму ниже:</p>
+<table class="article">
+ <tbody><tr><td><b>Код</b></td><td><b>Сопротивление при 25°С, кОм</b></td><td><b>R/T характеристика</b></td><td colspan="2"><b>B<small>25/100</small>, К</b></td></tr>
+ <tr><td colspan="5"><b>B57891S</b>, выводной 4,5мм <i>(<a href="http://www.epcos.com/inf/50/db/ntc_09/LeadedDisks__B57891__S891.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57891S0222+008</td><td align="right">2,2</td><td align="right"><a href="JavaScript:ntcRT(1008, 2.2);">1008</a></td><td colspan="2" align="right">3560</td></tr>
+ <tr><td>B57891S0502+008</td><td align="right">5</td><td align="right"><a href="JavaScript:ntcRT(2003, 5);">2003</a></td><td colspan="2" align="right">3980</td></tr>
+ <tr><td>B57891S0103+008</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(4901, 10);">4901</a></td><td colspan="2" align="right">3950</td></tr>
+ <tr><td>B57891S0203+008</td><td align="right">20</td><td align="right"><a href="JavaScript:ntcRT(2904, 20);">2904</a></td><td colspan="2" align="right">4300</td></tr>
+ <tr><td>B57891S0104+008</td><td align="right">100</td><td align="right"><a href="JavaScript:ntcRT(4003, 100);">4003</a></td><td colspan="2" align="right">4450</td></tr>
+ <tr><td colspan="5"><br><b>B57891M</b>, выводной 3,5мм <i>(<a href="http://www.epcos.com/inf/50/db/ntc_09/LeadedDisks__B57891__M891.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57891M0102+000</td><td align="right">1</td><td align="right"><a href="JavaScript:ntcRT(1009, 1);">1009</a></td><td colspan="2" align="right">3930</td></tr>
+ <tr><td>B57891M0152+000</td><td align="right">1,5</td><td align="right"><a href="JavaScript:ntcRT(1008, 1.5);">1008</a></td><td colspan="2" align="right">3560</td></tr>
+ <tr><td>B57891M0222+000</td><td align="right">2,2</td><td align="right"><a href="JavaScript:ntcRT(1013, 2.2);">1013</a></td><td colspan="2" align="right">3900</td></tr>
+ <tr><td>B57891M0332+000</td><td align="right">3,3</td><td align="right"><a href="JavaScript:ntcRT(2003, 3.3);">2003</a></td><td colspan="2" align="right">3980</td></tr>
+ <tr><td>B57891M0472+000</td><td align="right">4,7</td><td align="right"><a href="JavaScript:ntcRT(2003, 4.7);">2003</a></td><td colspan="2" align="right">3980</td></tr>
+ <tr><td>B57891M0682+000</td><td align="right">6,8</td><td align="right"><a href="JavaScript:ntcRT(2003, 6.8);">2003</a></td><td colspan="2" align="right">3980</td></tr>
+ <tr><td>B57891M0103+000</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(4901, 10);">4901</a></td><td colspan="2" align="right">3950</td></tr>
+ <tr><td>B57891M0153+000</td><td align="right">15</td><td align="right"><a href="JavaScript:ntcRT(2004, 15);">2004</a></td><td colspan="2" align="right">4100</td></tr>
+ <tr><td>B57891M0223+000</td><td align="right">22</td><td align="right"><a href="JavaScript:ntcRT(2904, 22);">2904</a></td><td colspan="2" align="right">4300</td></tr>
+ <tr><td>B57891M0333+000</td><td align="right">33</td><td align="right"><a href="JavaScript:ntcRT(2904, 33);">2904</a></td><td colspan="2" align="right">4300</td></tr>
+ <tr><td>B57891M0473+000</td><td align="right">47</td><td align="right"><a href="JavaScript:ntcRT(4012, 47);">4012</a></td><td colspan="2" align="right">4355</td></tr>
+ <tr><td>B57891M0683+000</td><td align="right">68</td><td align="right"><a href="JavaScript:ntcRT(4012, 68);">4012</a></td><td colspan="2" align="right">4355</td></tr>
+ <tr><td>B57891M0104+000</td><td align="right">100</td><td align="right"><a href="JavaScript:ntcRT(4003, 100);">4003</a></td><td colspan="2" align="right">4450</td></tr>
+ <tr><td>B57891M0154+000</td><td align="right">150</td><td align="right"><a href="JavaScript:ntcRT(2005, 150);">2005</a></td><td colspan="2" align="right">4600</td></tr>
+ <tr><td>B57891M0224+000</td><td align="right">220</td><td align="right"><a href="JavaScript:ntcRT(2005, 220);">2005</a></td><td colspan="2" align="right">4600</td></tr>
+ <tr><td>B57891M0334+000</td><td align="right">330</td><td align="right"><a href="JavaScript:ntcRT(2007, 330);">2007</a></td><td colspan="2" align="right">4830</td></tr>
+ <tr><td>B57891M0474+000</td><td align="right">470</td><td align="right"><a href="JavaScript:ntcRT(2006, 470);">2006</a></td><td colspan="2" align="right">5000</td></tr>
+ <tr><td colspan="5"><br><b>B57164K</b>, выводной 5,5мм <i>(<a href="http://www.epcos.com/inf/50/db/ntc_09/LeadedDisks__B57164__K164.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57164K0471+000</td><td align="right">0,47</td><td align="right"><a href="JavaScript:ntcRT(1306, 0.47);">1306</a></td><td colspan="2" align="right">3450</td></tr>
+ <tr><td>B57164K0681+000</td><td align="right">0,68</td><td align="right"><a href="JavaScript:ntcRT(1307, 0.68);">1307</a></td><td colspan="2" align="right">3560</td></tr>
+ <tr><td>B57164K0102+000</td><td align="right">1</td><td align="right"><a href="JavaScript:ntcRT(1011, 1);">1011</a></td><td colspan="2" align="right">3730</td></tr>
+ <tr><td>B57164K0152+000</td><td align="right">1,5</td><td align="right"><a href="JavaScript:ntcRT(1013, 1.5);">1013</a></td><td colspan="2" align="right">3900</td></tr>
+ <tr><td>B57164K0222+000</td><td align="right">2,2</td><td align="right"><a href="JavaScript:ntcRT(1013, 2.2);">1013</a></td><td colspan="2" align="right">3900</td></tr>
+ <tr><td>B57164K0332+000</td><td align="right">3,3</td><td align="right"><a href="JavaScript:ntcRT(4001, 3.3);">4001</a></td><td colspan="2" align="right">3950</td></tr>
+ <tr><td>B57164K0472+000</td><td align="right">4,7</td><td align="right"><a href="JavaScript:ntcRT(4001, 4.7);">4001</a></td><td colspan="2" align="right">3950</td></tr>
+ <tr><td>B57164K0682+000</td><td align="right">6,8</td><td align="right"><a href="JavaScript:ntcRT(2903, 6.8);">2903</a></td><td colspan="2" align="right">4200</td></tr>
+ <tr><td>B57164K0103+000</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(2904, 10);">2904</a></td><td colspan="2" align="right">4300</td></tr>
+ <tr><td>B57164K0153+000</td><td align="right">15</td><td align="right"><a href="JavaScript:ntcRT(1014, 15);">1014</a></td><td colspan="2" align="right">4250</td></tr>
+ <tr><td>B57164K0223+000</td><td align="right">22</td><td align="right"><a href="JavaScript:ntcRT(1012, 22);">1012</a></td><td colspan="2" align="right">4300</td></tr>
+ <tr><td>B57164K0333+000</td><td align="right">33</td><td align="right"><a href="JavaScript:ntcRT(1012, 33);">1012</a></td><td colspan="2" align="right">4300</td></tr>
+ <tr><td>B57164K0473+000</td><td align="right">47</td><td align="right"><a href="JavaScript:ntcRT(4003, 47);">4003</a></td><td colspan="2" align="right">4450</td></tr>
+ <tr><td>B57164K0683+000</td><td align="right">68</td><td align="right"><a href="JavaScript:ntcRT(2005, 68);">2005</a></td><td colspan="2" align="right">4600</td></tr>
+ <tr><td>B57164K0104+000</td><td align="right">100</td><td align="right"><a href="JavaScript:ntcRT(2005, 100);">2005</a></td><td colspan="2" align="right">4600</td></tr>
+ <tr><td>B57164K0154+000</td><td align="right">150</td><td align="right"><a href="JavaScript:ntcRT(2005, 150);">2005</a></td><td colspan="2" align="right">4600</td></tr>
+ <tr><td>B57164K0224+000</td><td align="right">220</td><td align="right"><a href="JavaScript:ntcRT(2007, 220);">2007</a></td><td colspan="2" align="right">4830</td></tr>
+ <tr><td>B57164K0334+000</td><td align="right">330</td><td align="right"><a href="JavaScript:ntcRT(2006, 330);">2006</a></td><td colspan="2" align="right">5000</td></tr>
+ <tr><td>B57164K0474+000</td><td align="right">470</td><td align="right"><a href="JavaScript:ntcRT(2006, 470);">2006</a></td><td colspan="2" align="right">5000</td></tr>
+ <tr><td colspan="5"><br><b>B57540G</b>, выводной, стеклянный "капля" 0,8мм <i>(<a href="http://www.epcos.com/inf/50/db/ntc_09/Glass_enc_Sensors__B57540__G540__G1540.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57540G0502+000, +002</td><td align="right">5</td><td align="right"><a href="JavaScript:ntcRT(8402, 5);">8402</a></td><td colspan="2" align="right">3497</td></tr>
+ <tr><td>B57540G1103+000, +002</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(8307, 10);">8307</a></td><td colspan="2" align="right">3492</td></tr>
+ <tr><td>B57540G1103+005, +007</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(7003, 10);">7003</a></td><td colspan="2" align="right">3625</td></tr>
+ <tr><td>B57540G0203+000, +002</td><td align="right">20</td><td align="right"><a href="JavaScript:ntcRT(8415, 20);">8415</a></td><td colspan="2" align="right">4006</td></tr>
+ <tr><td>B57540G1303+005, +007</td><td align="right">30</td><td align="right"><a href="JavaScript:ntcRT(7002, 30);">7002</a></td><td colspan="2" align="right">3988</td></tr>
+ <tr><td>B57540G0503+000, +002</td><td align="right">50</td><td align="right"><a href="JavaScript:ntcRT(8403, 50);">8403</a></td><td colspan="2" align="right">4006</td></tr>
+ <tr><td>B57540G1104+000, +002</td><td align="right">100</td><td align="right"><a href="JavaScript:ntcRT(8304, 100);">8304</a></td><td colspan="2" align="right">4092</td></tr>
+ <tr><td>B57540G0234+000, +002</td><td align="right">230</td><td align="right"><a href="JavaScript:ntcRT(8405, 230);">8405</a></td><td colspan="2" align="right">4264</td></tr>
+ <tr><td>B57540G0145+000, +002</td><td align="right">1400</td><td align="right"><a href="JavaScript:ntcRT(8406, 1400);">8406</a></td><td colspan="2" align="right">4581</td></tr>
+ <tr><td colspan="5"><br><b>B57551G</b>, выводной, стеклянный "капля" 1,8мм <i>(<a href="http://www.epcos.com/inf/50/db/ntc_09/Glass_enc_Sensors__B57551__G551__G1551__coated.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57551G0202+000, +002</td><td align="right">2</td><td align="right"><a href="JavaScript:ntcRT(8401, 2);">8401</a></td><td colspan="2" align="right">3436</td></tr>
+ <tr><td>B57551G1103+000, +002</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(8307, 10);">8307</a></td><td colspan="2" align="right">3492</td></tr>
+ <tr><td>B57551G1103+005, +007</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(7003, 10);">7003</a></td><td colspan="2" align="right">3625</td></tr>
+ <tr><td>B57551G1303+005, +007</td><td align="right">30</td><td align="right"><a href="JavaScript:ntcRT(7002, 30);">7002</a></td><td colspan="2" align="right">3988</td></tr>
+ <tr><td>B57551G1104+000, +002</td><td align="right">100</td><td align="right"><a href="JavaScript:ntcRT(8304, 100);">8304</a></td><td colspan="2" align="right">4092</td></tr>
+ <tr><td colspan="5"><br><b>B57621С5</b>, SMD 3,2х1,6мм <i>(<a href="http://www.epcos.com/inf/50/db/ntcsmd_11/SMD_NTCs_NiBarrier_Standard_1206.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57621C5102+062</td><td align="right">1,0</td><td align="right"><a href="JavaScript:ntcRT(3206, 1);">3206</a></td><td colspan="2" align="right">3450</td></tr>
+ <tr><td>B57621C5472+062</td><td align="right">4,7</td><td align="right"><a href="JavaScript:ntcRT(1309, 4.7);">1309</a></td><td colspan="2" align="right">3520</td></tr>
+ <tr><td>B57621C5103+062</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(1010, 10);">1010</a></td><td colspan="2" align="right">3530</td></tr>
+ <tr><td>B57621C5153+062</td><td align="right">15</td><td align="right"><a href="JavaScript:ntcRT(1008, 15);">1008</a></td><td colspan="2" align="right">3560</td></tr>
+ <tr><td colspan="5"><br><b>B57621С0</b>, SMD 3,2х1,6мм <i>(<a href="http://media.digikey.com/pdf/Data%20Sheets/Epcos%20PDFs/B57621C.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57621C0222+062</td><td align="right">2,2</td><td align="right"><a href="JavaScript:ntcRT(1308, 2.2);">1308</a></td><td colspan="2" align="right">3060</td></tr>
+ <tr><td>B57621C0332+062</td><td align="right">3,3</td><td align="right"><a href="JavaScript:ntcRT(1309, 3.3);">1309</a></td><td colspan="2" align="right">3520</td></tr>
+ <tr><td>B57621C0472+062</td><td align="right">4,7</td><td align="right"><a href="JavaScript:ntcRT(1309, 4.7);">1309</a></td><td colspan="2" align="right">3520</td></tr>
+ <tr><td>B57621C0103+062</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(1010, 10);">1010</a></td><td colspan="2" align="right">3530</td></tr>
+ <tr><td>B57621C0153+062</td><td align="right">15</td><td align="right"><a href="JavaScript:ntcRT(1008, 15);">1008</a></td><td colspan="2" align="right">3560</td></tr>
+ <tr><td>B57621C0223+062</td><td align="right">22</td><td align="right"><a href="JavaScript:ntcRT(1008, 22);">1008</a></td><td colspan="2" align="right">3560</td></tr>
+ <tr><td>B57621C0333+062</td><td align="right">33</td><td align="right"><a href="JavaScript:ntcRT(2003, 33);">2003</a></td><td colspan="2" align="right">3980</td></tr>
+ <tr><td>B57621C0473+062</td><td align="right">47</td><td align="right"><a href="JavaScript:ntcRT(2001, 47);">2001</a></td><td colspan="2" align="right">3920</td></tr>
+ <tr><td>B57621C0683+062</td><td align="right">68</td><td align="right"><a href="JavaScript:ntcRT(2001, 68);">2001</a></td><td colspan="2" align="right">3920</td></tr>
+ <tr><td>B57621C0104+062</td><td align="right">100</td><td align="right"><a href="JavaScript:ntcRT(4901, 100);">4901</a></td><td colspan="2" align="right">3950</td></tr>
+ <tr><td>B57621C0154+162</td><td align="right">150</td><td align="right"><a href="JavaScript:ntcRT(2903, 150);">2903</a></td><td colspan="2" align="right">4200</td></tr>
+ <tr><td>B57621C0224+062</td><td align="right">220</td><td align="right"><a href="JavaScript:ntcRT(2903, 220);">2903</a></td><td colspan="2" align="right">4200</td></tr>
+ <tr><td>B57621C0334+062</td><td align="right">330</td><td align="right"><a href="JavaScript:ntcRT(1014, 330);">1014</a></td><td colspan="2" align="right">4250</td></tr>
+ <tr><td>B57621C0474+062</td><td align="right">470</td><td align="right"><a href="JavaScript:ntcRT(1014, 470);">1014</a></td><td colspan="2" align="right">4250</td></tr>
+ <tr><td colspan="5"><br><b>B57703M</b>, выводной 10мм, с "ухом" 8,5x3,7мм <i>(<a href="http://www.epcos.com/inf/50/db/ntc_13/NTC_Probe_ass_M703.pdf" target="_blank">datasheet, pdf</a>)</i></td></tr>
+ <tr><td>B57703M0502G040</td><td align="right">5</td><td align="right"><a href="JavaScript:ntcRT(8016, 5);">8016</a></td><td colspan="2" align="right">3988</td></tr>
+ <tr><td>B57703M0103G040</td><td align="right">10</td><td align="right"><a href="JavaScript:ntcRT(8016, 10);">8016</a></td><td colspan="2" align="right">3988</td></tr>
+ <tr><td>B57703M0303G040</td><td align="right">30</td><td align="right"><a href="JavaScript:ntcRT(8018, 30);">8018</a></td><td colspan="2" align="right">3964</td></tr>
+</tbody></table>
+</body></html>
