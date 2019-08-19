@@ -1,4 +1,5 @@
-/Release/
-!/Release/Fancoil.hex
+.gitignore
 /sloeber.ino.cpp
 /Board/
+/Release/*
+!Fancoil.hex
