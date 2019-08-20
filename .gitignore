@@ -2,3 +2,4 @@
 /sloeber.ino.cpp
 /Release/*
 !/Release/Fancoil.*
+/Release/

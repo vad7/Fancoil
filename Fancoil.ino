@@ -18,11 +18,18 @@
 #include "LiquidCrystal.h"
 #include "NTC.h"
 
+// MiniCore board: Atmega8a
+// BOD 4.0V
+// Clock 8.192 MHz (UART0=115200)
+// LTO enabled
 #define VERSION F("1.00")
 //#define DEBUG_TO_SERIAL
 
 #define KEYS_MUX		((1<<REFS0) | analogPinToChannel(A2))
+//#define EXIST_R10		// R10 = 30k pullup keys line to VCC
+#ifndef EXIST_R10
 #define KEYS_INIT		PORTC |= (1<<PC2) // Pull-up, to GND: LEFT - 10kOm, OK - 30kOm, RIGHT - 56kOm
+#endif
 #define FAN_SPEED1_PIN	9	// arduino Dx
 #define FAN_SPEED2_PIN	10	// arduino Dx
 
