@@ -589,8 +589,10 @@ void setup()
 	SMCR = (1<<SE); // Idle sleep enable
 #endif
 	wdt_enable(WDTO_2S); // Enable WDT
-	// Setup keys
+	// Setup ports
 	KEYS_INIT;
+	pinMode(FAN_SPEED1_PIN, OUTPUT);
+	pinMode(FAN_SPEED2_PIN, OUTPUT);
 	// Setup ADC, AVcc reference, first read keys
 	ADC_Selector = 0;
 	ADMUX = (1<<REFS0) | NTC_AnalogMux[ADC_Selector];
