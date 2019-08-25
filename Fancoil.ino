@@ -247,6 +247,26 @@ void lcd_print_temp(int16_t t)
 	lcd.print(t / TEMP_DECIMAL_DIVIDER); lcd.print('.'); lcd.print(t % TEMP_DECIMAL_DIVIDER); // for %100 need different formula
 }
 
+// 0 - stop, 1 -
+void SetFanSpeed(uint8_t speed)
+{
+	if(speed > work.fan_speed_max) speed = work.fan_speed_max;
+	if(fan_speed != speed) {
+		fan_speed = speed;
+		fan_change_countdown = speed ? work.fan_work_time_min : work.fan_pause_min;
+		if(speed == 1) {
+			digitalWrite(FAN_SPEED2_PIN, 0);
+			digitalWrite(FAN_SPEED1_PIN, 1);
+		} else if(speed == 2) {
+			digitalWrite(FAN_SPEED1_PIN, 0);
+			digitalWrite(FAN_SPEED2_PIN, 1);
+		} else {
+			digitalWrite(FAN_SPEED1_PIN, 0);
+			digitalWrite(FAN_SPEED2_PIN, 0);
+		}
+	}
+}
+
 void SetupDisplay()
 {
 	lcd.clear();
@@ -482,26 +502,6 @@ void SetupSettings(void)
 		}
 	}
 	WaitKeysRelease();
-}
-
-// 0 - stop, 1 -
-void SetFanSpeed(uint8_t speed)
-{
-	if(speed > work.fan_speed_max) speed = work.fan_speed_max;
-	if(fan_speed != speed) {
-		fan_speed = speed;
-		fan_change_countdown = speed ? work.fan_work_time_min : work.fan_pause_min;
-		if(speed == 1) {
-			digitalWrite(FAN_SPEED2_PIN, 0);
-			digitalWrite(FAN_SPEED1_PIN, 1);
-		} else if(speed == 2) {
-			digitalWrite(FAN_SPEED1_PIN, 0);
-			digitalWrite(FAN_SPEED2_PIN, 1);
-		} else {
-			digitalWrite(FAN_SPEED1_PIN, 0);
-			digitalWrite(FAN_SPEED2_PIN, 0);
-		}
-	}
 }
 
 void UpdateFan(void)
