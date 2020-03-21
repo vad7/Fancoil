@@ -1,2 +1,2 @@
 spec.o: \
- C:/Users/Vadim/eclipse-workspace/.metadata/.plugins/org.eclipse.cdt.managedbuilder.core/spec.C
+ G:/Electric/EclipseWS/.metadata/.plugins/org.eclipse.cdt.managedbuilder.core/spec.c
