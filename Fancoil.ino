@@ -19,8 +19,10 @@
 #include "NTC.h"
 
 // MiniCore board: Atmega8a
-// BOD 4.0V
-// Clock 8 MHz (UART0=115200)
+// BOD 4.0V (BODLEVEL = 0)
+// UART0=115200
+// External Clock 8 MHz (CKSEL[3:0] = 1111, SUT[1:0] = 10, CKOPT = 0)
+// Bootloader disabled
 // LTO enabled
 #define VERSION F("1.01")
 //#define DEBUG_TO_SERIAL
@@ -35,7 +37,7 @@
 
 // LCD ---------- rs, en, d4, d5, d6, d7
 LiquidCrystal lcd( 6,  7,  2,  3,  4,  5);
-#define LCD_Backlite	11	// pin
+#define LCD_Backlite_pin	11
 
 // Датчики температуры аналоговые - NTC
 #ifdef TEMP_TABLE_ADC_VALUES
@@ -126,6 +128,7 @@ boolean  water_limit_stop = false;
 int8_t   SetupMenu, SetupLevel;
 uint8_t  main_loop_sec = 0;
 boolean  warming_up_mode = false;
+uint8_t  LCD_backlite = 0;
 
 struct WORK {
 	uint8_t Key_Up_ADC;
@@ -165,6 +168,7 @@ enum {
 	SetupMenu_FanSpeed2Threshold,
 	SetupMenu_FanWorkTimeMin,
 	SetupMenu_FanPauseMin,
+	SetupMenu_LCD_Backlite,
 	SetupMenu_FanTest,
 	SetupMenu_TOTAL
 };
@@ -332,6 +336,11 @@ void SetupDisplay()
 		lcd.setCursor(0, 1); // Second String
 		lcd.print(F("Pause"));
 		break;
+	case SetupMenu_LCD_Backlite:
+		lcd.print(F("LCD backlite"));
+		lcd.setCursor(0, 1); // Second String
+		lcd.print(F("Sec"));
+		break;
 	case SetupMenu_FanTest:
 		lcd.print(F("Fan Test"));
 		lcd.setCursor(0, 1); // Second String
@@ -372,6 +381,9 @@ void SetupDisplay()
 			break;
 		case SetupMenu_FanPauseMin:
 			lcd.print(work.fan_pause_min);
+			break;
+		case SetupMenu_LCD_Backlite:
+			lcd.print(work.LCD_backlite_time);
 			break;
 		case SetupMenu_FanTest:
 			lcd.print(fan_speed);
@@ -441,6 +453,9 @@ void SetupSettings(void)
 				case SetupMenu_FanPauseMin:
 					work.fan_pause_min++;
 					break;
+				case SetupMenu_LCD_Backlite:
+					work.LCD_backlite_time++;
+					break;
 				case SetupMenu_FanTest:
 					SetFanSpeed(fan_speed + 1);
 					break;
@@ -488,6 +503,9 @@ void SetupSettings(void)
 					break;
 				case SetupMenu_FanPauseMin:
 					work.fan_pause_min--;
+					break;
+				case SetupMenu_LCD_Backlite:
+					work.LCD_backlite_time--;
 					break;
 				case SetupMenu_FanTest:
 					SetFanSpeed(fan_speed - 1);
@@ -595,6 +613,10 @@ void setup()
 	KEYS_INIT;
 	pinMode(FAN_SPEED1_PIN, OUTPUT);
 	pinMode(FAN_SPEED2_PIN, OUTPUT);
+#ifdef LCD_Backlite_pin
+	pinMode(LCD_Backlite_pin, OUTPUT);
+	digitalWrite(LCD_Backlite_pin, 1);
+#endif
 	// Setup ADC, AVcc reference, first read keys
 	ADC_Selector = 0;
 	ADMUX = (1<<REFS0) | NTC_AnalogMux[ADC_Selector];  // REFS0 = AVCC with external capacitor at AREF pin
@@ -623,6 +645,7 @@ void setup()
 		work.fan_speed2_threshold = 25;
 		work.fan_work_time_min = 30;
 		work.fan_pause_min = 60;
+		work.LCD_backlite_time = 30;
 		eeprom_update_block(&work, &EEPROM.work, sizeof(EEPROM.work));
 		goto SetKeys;
 	}
@@ -634,6 +657,7 @@ SetKeys:
 	}
 	Keys_Pressed = Keys_Pressed_Prev = 0;
 	eeprom_read_block(&work, &EEPROM.work, sizeof(EEPROM.work));
+	LCD_backlite = work.LCD_backlite_time;
 	display_countdown = DISPLAY_STARTUP_DELAY;
 	delay(1); // wait NTC samples
 	for(uint8_t i = 0; i < NTC_number; i++) {
@@ -654,6 +678,11 @@ void loop()
 		main_loop_sec = 1000 / MAIN_LOOP_PERIOD;
 		if(display_countdown) display_countdown--;
 		if(main_loop_countdown && --main_loop_countdown == 0) fast_key_pressing = 0;
+#ifdef LCD_Backlite_pin
+		if(LCD_backlite && LCD_backlite != 255) if(--LCD_backlite == 0) {
+			digitalWrite(LCD_Backlite_pin, 0);
+		}
+#endif
 		if(save_settings_countdown && --save_settings_countdown == 0) {
 			lcd.clear();
 			eeprom_update_block(&work, &EEPROM.work, sizeof(EEPROM.work));
@@ -663,6 +692,12 @@ void loop()
 		if(fan_change_countdown) --fan_change_countdown;
 		UpdateFan();
 	}
+#ifdef LCD_Backlite_pin
+		if(Keys_Pressed && !LCD_backlite && work.LCD_backlite_time) {
+			LCD_backlite = work.LCD_backlite_time;
+			digitalWrite(LCD_Backlite_pin, 1);
+		}
+#endif
 	if(Keys_Pressed & KEY_OK) {
 		//DEBUGN("OK");
 		uint8_t tm = ENTERING_SETUP_TIME * 10;
