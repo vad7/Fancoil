@@ -20,9 +20,9 @@
 
 // MiniCore board: Atmega8a
 // BOD 4.0V
-// Clock 8.192 MHz (UART0=115200)
+// Clock 8 MHz (UART0=115200)
 // LTO enabled
-#define VERSION F("1.00")
+#define VERSION F("1.01")
 //#define DEBUG_TO_SERIAL
 
 #define KEYS_MUX		((1<<REFS0) | analogPinToChannel(A2))
@@ -35,6 +35,7 @@
 
 // LCD ---------- rs, en, d4, d5, d6, d7
 LiquidCrystal lcd( 6,  7,  2,  3,  4,  5);
+#define LCD_Backlite	11	// pin
 
 // Датчики температуры аналоговые - NTC
 #ifdef TEMP_TABLE_ADC_VALUES
@@ -142,6 +143,7 @@ struct WORK {
 	uint8_t fan_work_time_min; 		// sec
 	uint8_t fan_pause_min; 			// sec
 	int16_t warming_up_temp;
+	uint8_t LCD_backlite_time;		// sec, 0 - нет, 255 - всегда
 } work;
 
 struct _EEPROM {
@@ -595,7 +597,7 @@ void setup()
 	pinMode(FAN_SPEED2_PIN, OUTPUT);
 	// Setup ADC, AVcc reference, first read keys
 	ADC_Selector = 0;
-	ADMUX = (1<<REFS0) | NTC_AnalogMux[ADC_Selector];
+	ADMUX = (1<<REFS0) | NTC_AnalogMux[ADC_Selector];  // REFS0 = AVCC with external capacitor at AREF pin
 	ADCSRA = (1<<ADEN) | (1<<ADSC) | (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0); // ADC Interrupt Enable, ADC Start, ADC Prescaler: 128 (125000Hz)
 	// Setup classes
 #ifdef DEBUG_TO_SERIAL

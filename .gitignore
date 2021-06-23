@@ -2,6 +2,6 @@
 /Release/*
 !/Release/Fancoil.*
 /Release/
-.cproject
-.project
-.settings
+/.cproject
+/.project
+/.settings/
