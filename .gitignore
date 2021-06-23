@@ -1,8 +1,6 @@
 /sloeber.ino.cpp
 /Release/*
 !/Release/Fancoil*
-!/Release/fancoil*.*
-/Release/
 /.cproject
 /.project
 /.settings/
