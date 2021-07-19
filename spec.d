@@ -1,2 +1,2 @@
 spec.o: \
- C:/CPP/WS/.metadata/.plugins/org.eclipse.cdt.managedbuilder.core/spec.cpp
+ G:/Electric/WS/.metadata/.plugins/org.eclipse.cdt.managedbuilder.core/spec.cpp

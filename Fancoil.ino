@@ -24,7 +24,7 @@
 // External Clock 8 MHz (CKSEL[3:0] = 1111, SUT[1:0] = 10, CKOPT = 0)
 // Bootloader disabled
 // LTO enabled
-#define VERSION F("1.01")
+#define VERSION F("1.02")
 //#define DEBUG_TO_SERIAL
 
 #define KEYS_MUX		((1<<REFS0) | analogPinToChannel(A2))
@@ -123,6 +123,7 @@ uint8_t  main_loop_countdown = 0;
 uint8_t  save_settings_countdown = 0;
 uint8_t  display_countdown;
 uint8_t  fan_change_countdown = 0;
+uint8_t  auto_switch_mode_countdown = 0;
 uint8_t  fan_speed = 0; // 0 - stopped, 1 - Speed 1, 2 - Speed 2
 boolean  water_limit_stop = false;
 int8_t   SetupMenu, SetupLevel;
@@ -147,6 +148,7 @@ struct WORK {
 	uint8_t fan_pause_min; 			// sec
 	int16_t warming_up_temp;
 	uint8_t LCD_backlite_time;		// sec, 0 - нет, 255 - всегда
+	uint8_t auto_switch_mode;		// Autoselect mode (Heat/Cool) by water and air temp
 } work;
 
 struct _EEPROM {
@@ -250,7 +252,16 @@ void lcd_print_temp(int16_t t)
 		lcd.print('-');
 		t = -t;
 	}
-	lcd.print(t / TEMP_DECIMAL_DIVIDER); lcd.print('.'); lcd.print(t % TEMP_DECIMAL_DIVIDER); // for %100 need different formula
+	lcd.print(t / TEMP_DECIMAL_DIVIDER);
+#if TEMP_DECIMAL_DIVIDER >= 10
+	lcd.print('.');
+  #if TEMP_DECIMAL_DIVIDER == 10
+	lcd.print(t % TEMP_DECIMAL_DIVIDER);
+  #else // TEMP_DECIMAL_DIVIDER == 100
+	lcd.print(t % TEMP_DECIMAL_DIVIDER / 10);
+	lcd.print(t % 10);
+  #endif
+#endif
 }
 
 // 0 - stop, 1 -
@@ -569,8 +580,16 @@ void RefreshDisplay(void)
 	if(!display_countdown) {
 		display_countdown = DISPLAY_REFRESH_PERIOD;
 		lcd.setCursor(0, 0);
+		// 1234567890123456
+		// Heat: 21.2/24.0°
+		// OFF : 21.2/24.0°
+		// A-C : 21.2/24.0°
 		if(!work.OnOff) {
-			lcd.print(F("Off "));
+			lcd.print(F("OFF "));
+		} else if(work.auto_switch_mode) {
+			lcd.print(F("A\x7E")); // A->
+			if(work.mode == Mode_Heat) lcd.print(warming_up_mode ? 'W' : 'H'); else if(work.mode == Mode_Cool) lcd.print('C'); else lcd.print('?');
+			lcd.print(' ');
 		} else if(work.mode == Mode_Heat) {
 			lcd.print(warming_up_mode ? F("Warm") : F("Heat"));
 		} else if(work.mode == Mode_Cool) {
@@ -689,8 +708,18 @@ void loop()
 			lcd.print(F("Settings saved."));
 			display_countdown = DISPLAY_REFRESH_PERIOD;
 		}
-		if(fan_change_countdown) --fan_change_countdown;
+		if(fan_change_countdown) fan_change_countdown--;
 		UpdateFan();
+		if(auto_switch_mode_countdown) auto_switch_mode_countdown--;
+		else if(work.auto_switch_mode) {
+			if(work.mode != Mode_Heat && ntc[TAIR].T < work.target_air[Mode_Heat] - work.target_air_hysteresis && ntc[TWATER].T > work.water_limit[Mode_Heat]) {
+				work.mode = Mode_Heat;
+				auto_switch_mode_countdown = 255;
+			} else if(work.mode != Mode_Cool && ntc[TAIR].T > work.target_air[Mode_Cool] + work.target_air_hysteresis && ntc[TWATER].T < work.water_limit[Mode_Cool]) {
+				work.mode = Mode_Cool;
+				auto_switch_mode_countdown = 255;
+			}
+		}
 	}
 #ifdef LCD_Backlite_pin
 		if(Keys_Pressed && !LCD_backlite && work.LCD_backlite_time) {
@@ -712,8 +741,16 @@ void loop()
 			if(work.OnOff) {
 				if(main_loop_countdown == 0) work.OnOff = false;
 				else {
-					work.mode = MODE(work.mode + 1);
-					if(work.mode == Mode_TOTAL) work.mode = MODE(0);
+					if(work.auto_switch_mode) {
+						work.auto_switch_mode = 0;
+						work.mode = MODE(0);
+					} else {
+						work.mode = MODE(work.mode + 1);
+						if(work.mode == Mode_TOTAL) {
+							work.auto_switch_mode = 1;
+							work.mode = MODE(0);
+						}
+					}
 				}
 			} else work.OnOff = true;
 			if(!work.OnOff) warming_up_mode = false;

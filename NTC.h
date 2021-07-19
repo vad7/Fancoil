@@ -17,7 +17,7 @@
 
 #define TEMP_TABLE_ADC_VALUES			// Table contains 16 bit(max) ADC value, when omitted 32 bit resistance in Om
 #define TEMP_AVERAGING_SAMPLES	5
-#define TEMP_DECIMAL_DIVIDER 	10			// Десятые градуса
+#define TEMP_DECIMAL_DIVIDER 	10			// Десятые градуса, Точность температур - после запятой
 // Подключение датчика [Vcc] - [ResistorToVcc] - [Analog input] - [NTC] - [Gnd]
 #define TEMP_VCC				50			// *10 V
 #define TEMP_AREF				50			// *10 V
