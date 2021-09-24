@@ -24,7 +24,7 @@
 // External Clock 8 MHz (CKSEL[3:0] = 1111, SUT[1:0] = 10, CKOPT = 0)
 // Bootloader disabled
 // LTO enabled
-#define VERSION F("1.02")
+#define VERSION F("1.03")
 //#define DEBUG_TO_SERIAL
 
 #define KEYS_MUX		((1<<REFS0) | analogPinToChannel(A2))
@@ -36,35 +36,65 @@
 #define FAN_SPEED2_PIN	10	// arduino Dx
 
 // LCD ---------- rs, en, d4, d5, d6, d7
-LiquidCrystal lcd( 6,  7,  2,  3,  4,  5);
+LiquidCrystal lcd( 6,  7,  2,  3,  4,  5);	// LCD 16x2
 #define LCD_Backlite_pin	11
 
 // Датчики температуры аналоговые - NTC
+#define NTC_AIR_RESISTANCE		10		// kOm
+#define NTC_AIR_B25				3435	// B25/50 value
+#define NTC_WATER_RESISTANCE	10		// kOm
+#define NTC_WATER_B25			3435	// B25/50 value
 #ifdef TEMP_TABLE_ADC_VALUES
 // Для воздуха
-// NTC, 100K, B25-3950, Таблица сопротивлений через 5° в Ом. (-20..95°), резистор 99.8k
-const TEMP_TABLE NTC_table1[] PROGMEM = { 935, 908, 874, 835, 790, 739, 685, 628, 570, 513, 457, 404, 355, 311, 271, 235, 204, 177, 154, 133, 116, 101, 88, 76 };
+	#if NTC_AIR_B25 == 3950
+// NTC, 10/100K, B25-3950, Таблица АЦП через 5°. (-20..95°), резистор 10/100k
+//const TEMP_TABLE NTC_table1[] PROGMEM = { 935, 908, 874, 834, 789, 739, 685, 628, 570, 512, 456, 404, 355, 310, 270, 235, 204, 177, 153, 133, 115, 100, 87, 76 };
+	#elif NTC_AIR_B25 == 3435
+// NTC, NTC-MF52-103/3435 10K 3435+-1%, Таблица АЦП через 5°. (-20..95°), резистор 10k
+const TEMP_TABLE NTC_table1[] PROGMEM = { 907, 877, 842, 803, 759, 713, 664, 613, 562, 512, 464, 417, 374, 334, 298, 265, 235, 209, 185, 164, 146, 130, 116, 103 };
+	#endif
 #else
+	#if NTC_AIR_RESISTANCE == 10
+// NTC, 10K, B25-3950, Таблица сопротивлений через 5° в Ом. (-20..95°)
+const TEMP_TABLE NTC_table1[] PROGMEM = { 105385, 77898, 58246, 44026, 33621, 25925, 20175, 15837, 12535, 10000, 8037, 6506, 5301, 4348, 3588, 2978, 2486, 2086, 1760, 1492, 1270, 1087, 934, 805 };
+	#else
 // NTC, 100K, B25-3950, Таблица сопротивлений через 5° в Ом. (-20..95°)
 const TEMP_TABLE NTC_table1[] PROGMEM = { 1053847, 778981, 582457, 440260, 336206, 259246, 201746, 158371, 125353, 100000, 80371, 65055, 53015, 43481, 35882, 29784, 24862, 20864, 17598, 14917, 12703, 10867, 9336, 8054 };
+	#endif
 #endif
 #define NTC_table1S sizeof(NTC_table1) / sizeof(NTC_table1[0])
 
-//#define NTC_table2 NTC_table1 // when the same
 #ifndef NTC_table2
-// NTC, 10K, B25-3950, Таблица сопротивлений через 5° в Ом. (-20..95°)
-//const uint32_t NTC_table2[] PROGMEM = { 105385, 77898, 58246, 44026, 33621, 25925, 20175, 15837, 12535, 10000, 8037, 6506, 5301, 4348, 3588, 2978, 2486, 2086, 1760, 1492, 1270, 1087, 934, 805 };
 #ifdef TEMP_TABLE_ADC_VALUES
-// NTC, 10K, B25-3950, Таблица сопротивлений через 5° в Ом. (-20..95°), резистор 9.978k
-const TEMP_TABLE NTC_table2[] PROGMEM = { 935, 908, 874, 835, 790, 739, 685, 628, 570, 513, 457, 404, 355, 311, 271, 235, 204, 177, 154, 133, 116, 101, 88, 76 };
-// Thermistor Resistor NTC-MF52-103/3435 10K 3435+-1%, резистор 9.978k
-//const TEMP_TABLE NTC_table2[] PROGMEM = { 907, 877, 842, 803, 760, 713, 664, 614, 563, 513, 464, 418, 375, 335, 298, 265, 236, 209, 185, 165, 146, 130, 116, 103 };
+	#if NTC_AIR_B25 == NTC_WATER_B25
+#define NTC_table2 NTC_table1 // when the same
+	#else
+		#if NTC_AIR_B25 == 3950
+// NTC, 10/100K, B25-3950, Таблица АЦП через 5°. (-20..95°), резистор 10/100k
+const TEMP_TABLE NTC_table2[] PROGMEM = { 935, 908, 874, 834, 789, 739, 685, 628, 570, 512, 456, 404, 355, 310, 270, 235, 204, 177, 153, 133, 115, 100, 87, 76 };
+		#elif NTC_AIR_B25 == 3435
+// Thermistor Resistor NTC-MF52-103/3435 10K 3435+-1%, резистор 10k
+const TEMP_TABLE NTC_table2[] PROGMEM = { 907, 877, 842, 803, 759, 713, 664, 613, 562, 512, 464, 417, 374, 334, 298, 265, 235, 209, 185, 164, 146, 130, 116, 103 };
+		#endif
+	#endif
 #else
-
+	#if NTC_AIR_RESISTANCE == 10
+		#if NTC_AIR_B25 == 3950
 // NTC, 10K, B25-3950, Таблица сопротивлений через 5° в Ом. (-20..95°)
 const TEMP_TABLE NTC_table2[] PROGMEM = { 105385, 77898, 58246, 44026, 33621, 25925, 20175, 15837, 12535, 10000, 8037, 6506, 5301, 4348, 3588, 2978, 2486, 2086, 1760, 1492, 1270, 1087, 934, 805 };
+		#elif NTC_AIR_B25 == 3435
 // Thermistor Resistor NTC-MF52-103/3435 10K 3435+-1%
-//const TEMP_TABLE NTC_table2[] PROGMEM = { 77523, 59606, 46290, 36290, 28704, 22897, 18410, 14916, 12171, 10000, 8269, 6881, 5759, 4847, 4101, 3488, 2981, 2559, 2207, 1912, 1662, 1451, 1272, 1118 };
+const TEMP_TABLE NTC_table2[] PROGMEM = { 77523, 59606, 46290, 36290, 28704, 22897, 18410, 14916, 12171, 10000, 8269, 6881, 5759, 4847, 4101, 3488, 2981, 2559, 2207, 1912, 1662, 1451, 1272, 1118 };
+		#endif
+	#else
+		#if NTC_AIR_B25 == 3950
+// NTC, 100K, B25-3950, Таблица сопротивлений через 5° в Ом. (-20..95°)
+const TEMP_TABLE NTC_table1[] PROGMEM = { 1053847, 778981, 582457, 440260, 336206, 259246, 201746, 158371, 125353, 100000, 80371, 65055, 53015, 43481, 35882, 29784, 24862, 20864, 17598, 14917, 12703, 10867, 9336, 8054 };
+		#elif NTC_AIR_B25 == 3435
+// Thermistor Resistor NTC-MF52-104/3435 100K 3435+-1%
+const TEMP_TABLE NTC_table2[] PROGMEM = { 775225, 596060, 462902, 362897, 287043, 228966, 184104, 149157, 121714, 100000, 82694, 68806, 57588, 48469, 41012, 34879, 29809, 25593, 22072, 19117, 16624, 14513, 12718, 11185 };
+		#endif
+	#endif
 #endif
 #endif
 #define NTC_table2S sizeof(NTC_table2) / sizeof(NTC_table2[0])
@@ -76,7 +106,7 @@ const TEMP_TABLE NTC_table2[] PROGMEM = { 105385, 77898, 58246, 44026, 33621, 25
 #define NTC_number	2 // Количество
 //................................................    Воздух  ,    Подача
 const uint16_t  NTC_AnalogMux[NTC_number]      = {  AtoMUX(A0),  AtoMUX(A1) };
-const uint32_t  NTC_PullupResistor[NTC_number] = {      100000,       10000 };
+const uint32_t  NTC_PullupResistor[NTC_number] = { NTC_AIR_RESISTANCE * 1000, NTC_WATER_RESISTANCE * 1000 };
 const TEMP_TABLE *NTC_Table[NTC_number]        = {  NTC_table1,  NTC_table2 };
 const uint8_t   NTC_TableSize[NTC_number]      = { NTC_table1S, NTC_table2S };
 uint16_t NTC_adcval[NTC_number];
@@ -328,14 +358,18 @@ void SetupDisplay()
 		lcd.print(F("Threshold"));
 		break;
 	case SetupMenu_TempCorrect1:
-		lcd.print(F("Correct"));
+		lcd.print(F("Correct AIR t\xDF"));
 		lcd.setCursor(0, 1); // Second String
-		lcd.print(F("Air t\xDF"));
+		lcd.print(NTC_AIR_RESISTANCE);
+		lcd.print(F("k,B"));
+		lcd.print(NTC_AIR_B25);
 		break;
 	case SetupMenu_TempCorrect2:
-		lcd.print(F("Correct"));
+		lcd.print(F("Correct WATER t\xDF"));
 		lcd.setCursor(0, 1); // Second String
-		lcd.print(F("Water t\xDF"));
+		lcd.print(NTC_WATER_RESISTANCE);
+		lcd.print(F("k,B"));
+		lcd.print(NTC_WATER_B25);
 		break;
 	case SetupMenu_FanWorkTimeMin:
 		lcd.print(F("Fan time"));
@@ -599,7 +633,7 @@ void RefreshDisplay(void)
 		int16_t t = ntc[TAIR].T;
 		if(t >= 0) lcd.print(' ');
 		lcd_print_temp(t);
-		lcd.print('/');
+		lcd.print('\x7E'); // ->
 		lcd_print_temp(work.target_air[work.mode]);
 		lcd.print('\xDF'); // '°'
 		lcd.setCursor(0, 1); // Second String
