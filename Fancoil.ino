@@ -358,6 +358,7 @@ void SetupDisplay()
 		lcd.print(F("Threshold"));
 		break;
 	case SetupMenu_TempCorrect1:
+		lcd.setCursor(0, 0);
 		lcd.print(F("Correct AIR t\xDF"));
 		lcd.setCursor(0, 1); // Second String
 		lcd.print(NTC_AIR_RESISTANCE);
@@ -365,6 +366,7 @@ void SetupDisplay()
 		lcd.print(NTC_AIR_B25);
 		break;
 	case SetupMenu_TempCorrect2:
+		lcd.setCursor(0, 0);
 		lcd.print(F("Correct WATER t\xDF"));
 		lcd.setCursor(0, 1); // Second String
 		lcd.print(NTC_WATER_RESISTANCE);
